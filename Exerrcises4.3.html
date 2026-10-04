@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Exercise 4.2 - D3 CSV Data Visualization</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      .bar {
+        fill: steelblue;
+      }
+      .bar:hover {
+        fill: orange;
+      }
+      .axis-text {
+        font-size: 11px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>TV Energy Consumption Visualization</h1>
+    <p>Loading data from <code>tv_2026_02_15.csv</code></p>
+
+    <div id="chart"></div>
+
+    <script>
+      // CSV ဖိုင်ကို ဖတ်
+      d3.csv("../tv_2026_02_15.csv")
+        .then(function (data) {
+          // ၁။ Data Cleaning & Parsing (String များကို Number ပြောင်းလဲ)
+          data.forEach((d) => {
+            d.energy = +d["Labelled energy consumption (kWh/year)"];
+            d.screensize = +d.screensize;
+            d.star = +d.Star2;
+          });
+
+          // ပထမဆုံး TV မော်ဒယ် ၁၀ ခုကိုသာ နမူနာ ရွေးထုတ်
+          const subset = data.slice(0, 10);
+
+          // SVG Container ဆောက်ခြင်း
+          const svgWidth = 600;
+          const barHeight = 25;
+          const svgHeight = subset.length * (barHeight + 5) + 30;
+
+          const svg = d3
+            .select("#chart")
+            .append("svg")
+            .attr("width", svgWidth)
+            .attr("height", svgHeight)
+            .style("background-color", "#f9f9f9");
+
+          // ၂။ D3 .data().enter() ဖြင့် Bars တွေကို ဆွဲ
+          svg
+            .selectAll("rect")
+            .data(subset)
+            .enter()
+            .append("rect")
+            .attr("class", "bar")
+            .attr("x", 150) // Brand Name အတွက် Margin ချန်
+            .attr("y", (d, i) => i * (barHeight + 5) + 10)
+            .attr("width", (d) => d.energy / 3) // Scale တန်ဖိုး ချိန်
+            .attr("height", barHeight);
+
+          // ၃။ Brand & Model စာသားများ ထည့်သွင်း
+          svg
+            .selectAll("text.label")
+            .data(subset)
+            .enter()
+            .append("text")
+            .attr("class", "label axis-text")
+            .attr("x", 10)
+            .attr("y", (d, i) => i * (barHeight + 5) + 27)
+            .text((d) => `${d.Brand_Reg} (${d.screensize}cm)`);
+
+          // ၄။ Energy Value စာသားများ Bars ပေါ်မှာထည့်
+          svg
+            .selectAll("text.value")
+            .data(subset)
+            .enter()
+            .append("text")
+            .attr("class", "value axis-text")
+            .attr("x", (d) => 155 + d.energy / 3)
+            .attr("y", (d, i) => i * (barHeight + 5) + 27)
+            .text((d) => `${d.energy} kWh`);
+        })
+        .catch(function (error) {
+          console.error("Error loading the CSV file:", error);
+        });
+    </script>
+  </body>
+</html>

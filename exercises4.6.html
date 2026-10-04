@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Exercise 4.6 - D3 Scaling Charts</title>
+    <!-- D3.js v7 CDN Loading -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      .chart-title {
+        color: #2c3e50;
+      }
+      .bar {
+        fill: #2ea043;
+        transition: fill 0.2s;
+      }
+      .bar:hover {
+        fill: #218838;
+      }
+      .label {
+        font-size: 11px;
+        fill: white;
+        font-weight: bold;
+        text-anchor: middle;
+      }
+      .x-axis-text {
+        font-size: 10px;
+        fill: #333;
+        text-anchor: middle;
+      }
+    </style>
+  </head>
+  <body>
+    <h1 class="chart-title">Exercise 4.6: Scaling Charts with D3 Scales</h1>
+    <p>Using <code>d3.scaleBand()</code> and <code>d3.scaleLinear()</code></p>
+
+    <div id="chart"></div>
+
+    <script>
+      // CSV ကို ဖတ်
+      d3.csv("../tv_2026_02_15.csv")
+        .then(function (data) {
+          // 1. Data Cleaning
+          data.forEach((d) => {
+            d.energy = +d["Labelled energy consumption (kWh/year)"];
+          });
+
+          const dataset = data.slice(0, 15); // TV မော်ဒယ် ၁၅ ခု
+
+          // 2. Chart Layout & Dimensions သတ်မှတ်
+          const svgWidth = 650;
+          const svgHeight = 350;
+          const margin = { top: 30, right: 20, bottom: 50, left: 20 };
+          const chartWidth = svgWidth - margin.left - margin.right;
+          const chartHeight = svgHeight - margin.top - margin.bottom;
+
+          // 3. D3 SCALES ဖန်တီး
+          // X Scale: Categories/Brands များအတွက် scaleBand သုံးထားတယ်
+          const xScale = d3
+            .scaleBand()
+            .domain(dataset.map((d, i) => i)) // Data Index များ သို့မဟုတ် Brands များ
+            .range([0, chartWidth])
+            .paddingInner(0.2); // Bars ကြား အကွာအဝေး (20%)ထား
+
+          // Y Scale: Linear Values များအတွက် scaleLinear သုံး
+          const yScale = d3
+            .scaleLinear()
+            .domain([0, d3.max(dataset, (d) => d.energy)]) // Data Domain (0 မှ Max Value အထိ)
+            .range([chartHeight, 0]); // Screen Range (SVG ရဲ့ y=0 က အပေါ်မှာရှိလို့ Range ပြောင်းပြန်ယူ)
+
+          // SVG Container ဖန်တီး
+          const svg = d3
+            .select("#chart")
+            .append("svg")
+            .attr("width", svgWidth)
+            .attr("height", svgHeight)
+            .style("background-color", "#f8f9fa");
+
+          // SVG Group (<g>) သို့ Margin Translate လုပ်
+          const chartGroup = svg
+            .append("g")
+            .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+          // 4. DRAWING BARS WITH SCALES
+          chartGroup
+            .selectAll("rect")
+            .data(dataset)
+            .enter()
+            .append("rect")
+            .attr("class", "bar")
+            .attr("x", (d, i) => xScale(i))
+            .attr("y", (d) => yScale(d.energy))
+            .attr("width", xScale.bandwidth()) // scaleBand မှ အလိုအလျောက် တွက်ပေးသော Width တန်ဖိုး
+            .attr("height", (d) => chartHeight - yScale(d.energy));
+
+          // 5. DRAWING VALUE LABELS
+          chartGroup
+            .selectAll("text.value")
+            .data(dataset)
+            .enter()
+            .append("text")
+            .attr("class", "label")
+            .attr("x", (d, i) => xScale(i) + xScale.bandwidth() / 2)
+            .attr("y", (d) => yScale(d.energy) + 15)
+            .text((d) => Math.round(d.energy));
+
+          // 6. DRAWING X-AXIS LABELS
+          chartGroup
+            .selectAll("text.brand")
+            .data(dataset)
+            .enter()
+            .append("text")
+            .attr("class", "x-axis-text")
+            .attr("x", (d, i) => xScale(i) + xScale.bandwidth() / 2)
+            .attr("y", chartHeight + 20)
+            .text((d) => d.Brand_Reg.substring(0, 4));
+        })
+        .catch(function (error) {
+          console.error("Error loading CSV:", error);
+        });
+    </script>
+  </body>
+</html>

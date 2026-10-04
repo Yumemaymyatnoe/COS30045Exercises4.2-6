@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exercise 4.2 - D3 Manipulation</title>
+    <!-- D3.js v7 CDN Loading -->
+    <script stroke-linecap="round" src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .highlight {
+            color: red;
+            font-weight: bold;
+        }
+        .box {
+            width: 100px;
+            height: 50px;
+            background-color: lightsteelblue;
+            margin: 5px;
+            display: inline-block;
+            text-align: center;
+            line-height: 50px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Exercise 4.2: D3 Manipulate and Add Elements</h1>
+    <p id="first-paragraph">This is the original text.</p>
+
+    <div id="chart-container"></div>
+
+    <script>
+        // --- STEP 1: Selecting and Changing Styles/Text ---
+        // 1.1 Element တစ်ခုကို ရွေးပြီး စာသား ပြောင်းမည်
+        d3.select("#first-paragraph")
+          .text("Text updated using D3.js!")
+          .style("color", "darkblue")
+          .style("font-size", "18px");
+
+        // --- STEP 2: Adding (Appending) New Elements ---
+        // 2.1 Container ထဲသို့ Paragraph အသစ် ထည့်မည်
+        d3.select("#chart-container")
+          .append("p")
+          .text("This paragraph was dynamically added with .append()")
+          .attr("class", "highlight");
+
+        // 2.2 Container ထဲသို့ SVG Canvas အသစ်တစ်ခု ထည့်မည်
+        const svg = d3.select("#chart-container")
+                      .append("svg")
+                      .attr("width", 400)
+                      .attr("height", 150)
+                      .style("background-color", "#f0f0f0");
+
+        // SVG ထဲသို့ Shape (Circle) တစ်ခု ထည့်မည်
+        svg.append("circle")
+           .attr("cx", 70)
+           .attr("cy", 75)
+           .attr("r", 40)
+           .attr("fill", "teal");
+
+        // --- STEP 3: Data Binding and Creating Multiple Elements ---
+        const dataset = [10, 20, 30, 40, 50];
+
+        // Data ပေါ် မူတည်ပြီး SVG Circles များ ဒိုင်းနမစ် နည်းလမ်းဖြင့် ဆွဲမည်
+        svg.selectAll("circle.data-circle")
+           .data(dataset)
+           .enter()
+           .append("circle")
+           .attr("class", "data-circle")
+           .attr("cx", (d, i) => 150 + i * 45)
+           .attr("cy", 75)
+           .attr("r", d => d / 2)
+           .attr("fill", "orange");
+    </script>
+</body>
+</html>

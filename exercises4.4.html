@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Exercise 4.4 - Load Data from CSV</title>
+    <!-- D3.js v7 CDN Loading -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      h1 {
+        color: #2c3e50;
+      }
+      .bar {
+        fill: #3498db;
+        transition: fill 0.2s;
+      }
+      .bar:hover {
+        fill: #e67e22;
+      }
+      .label {
+        font-size: 11px;
+        fill: #333;
+      }
+      .value-label {
+        font-size: 10px;
+        fill: #fff;
+        font-weight: bold;
+        text-anchor: end;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Exercise 4.4: Loading Data from CSV</h1>
+    <p>Visualising TV Energy Consumption (kWh/year)</p>
+
+    <div id="chart"></div>
+
+    <script>
+      // 1. CSV File ကို d3.csv() သုံးပြီး ဖတ်
+      d3.csv("../tv_2026_02_15.csv")
+        .then(function (data) {
+          // Data နမူနာ စိစစ်ကြည့်ရန် Console တွင် ထုတ်ပြ
+          console.log("Loaded CSV Data:", data);
+
+          // 2. Data Pre-processing (String မှ Number သို့ ပြောင်းလဲ)
+          data.forEach((d) => {
+            d.energy = +d["Labelled energy consumption (kWh/year)"];
+          });
+
+          // Data ပမာဏ များရင် ပထမဆုံး မော်ဒယ် ၁၅ ခုကိုသာ Chart ဆွဲ
+          const dataset = data.slice(0, 15);
+
+          // Chart dimensions သတ်မှတ်
+          const svgWidth = 700;
+          const barHeight = 22;
+          const gap = 6;
+          const svgHeight = dataset.length * (barHeight + gap) + 20;
+          const maxEnergy = d3.max(dataset, (d) => d.energy);
+
+          // 3. SVG Canvas ထည့်သွင်း
+          const svg = d3
+            .select("#chart")
+            .append("svg")
+            .attr("width", svgWidth)
+            .attr("height", svgHeight)
+            .style("background-color", "#f8f9fa");
+
+          // 4. Data Binding ဖြင့် Rectangles (Bars) တွေကိုဆွဲ
+          svg
+            .selectAll("rect")
+            .data(dataset)
+            .enter()
+            .append("rect")
+            .attr("class", "bar")
+            .attr("x", 160) // Brand name များအတွက် Margin ထည့်
+            .attr("y", (d, i) => i * (barHeight + gap) + 10)
+            .attr("width", (d) => (d.energy / maxEnergy) * 450) // Scale တန်ဖိုး ချိန်ညှိ
+            .attr("height", barHeight);
+
+          // 5. Y-Axis Label (Brand Name) များထည့်သွင်း
+          svg
+            .selectAll("text.brand-label")
+            .data(dataset)
+            .enter()
+            .append("text")
+            .attr("class", "label brand-label")
+            .attr("x", 150)
+            .attr("y", (d, i) => i * (barHeight + gap) + 25)
+            .attr("text-anchor", "end")
+            .text((d) => `${d.Brand_Reg} (${d.screensize}cm)`);
+
+          // 6. Bar ပေါ်တွင် Energy Value (kWh) စာသားတွေ ထည့်
+          svg
+            .selectAll("text.value-label")
+            .data(dataset)
+            .enter()
+            .append("text")
+            .attr("class", "value-label")
+            .attr("x", (d) => 155 + (d.energy / maxEnergy) * 450)
+            .attr("y", (d, i) => i * (barHeight + gap) + 25)
+            .text((d) => `${d.energy} kWh`);
+        })
+        .catch(function (error) {
+          // CSV Load လုပ်ရာတွင် Error ရှိရင် ပြ
+          console.error("Error loading CSV file:", error);
+          d3.select("#chart")
+            .append("p")
+            .style("color", "red")
+            .text(
+              "Failed to load CSV file. Please make sure you are running a local web server (e.g. Live Server).",
+            );
+        });
+    </script>
+  </body>
+</html>
